@@ -1,0 +1,37 @@
+services:
+  helpdesk_postgres:
+    container_name: helpdesk_postgres
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: helpdesk
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: helpdesk
+
+  helpdesk:
+    container_name: helpdesk
+    build: "."
+    ports:
+      - 3000:3000
+      - 5003:5003
+    restart: always
+    depends_on:
+      - helpdesk_postgres
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget --spider $$API_URL"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      DB_USERNAME: "helpdesk"
+      DB_PASSWORD: "1234"
+      DB_HOST: "helpdesk_postgres"
+      SECRET: 'helpdesk4life'
+      DATABASE_URL: "postgresql://helpdesk:1234@helpdesk_postgres:5432/helpdesk"
+
+volumes:
+ pgdata:
